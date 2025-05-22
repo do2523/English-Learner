@@ -9,6 +9,7 @@ import { RouterModule } from '@angular/router';
 })
 export class AppComponent {
   @ViewChild('statusDiv') statusDiv!: ElementRef;
+  @ViewChild('statusH1') statusH1!: ElementRef;
   @ViewChild('listContainer') listContainer!: ElementRef;
 
   isRecording = false;
@@ -75,23 +76,8 @@ export class AppComponent {
       });
 
       const text = await response.text();
-      let result: string[];
-
-      try {
-        result = JSON.parse(text);
-      } catch (e) {
-        alert("Failed to parse response. Make sure it's a valid array.");
-        console.error('Parsing error:', e);
-        return;
-      }
-
-      const listEl = this.listContainer.nativeElement as HTMLElement;
-      listEl.innerHTML = '';
-      result.forEach((item) => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        listEl.appendChild(li);
-      });
+      let word = this.statusH1.nativeElement;
+      word.textContent = text; // 👈 Clear intent
     } catch (err) {
       console.error('Transcription failed:', err);
       alert('Transcription failed. Check console for details.');

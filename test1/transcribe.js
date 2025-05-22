@@ -11,11 +11,16 @@ async function transcribeFile(gcsUri) {
 
   try {
     const [response] = await client.recognize(request);
-    const transcription = response.results
-      .map((result) => result.alternatives[0].transcript)
-      .join("\n");
-    console.log(`API Call: Transcription for ${gcsUri}:`);
-    return transcription;
+    const results = response.results;
+
+    const lastTranscript =
+      results.length > 0
+        ? results[results.length - 1].alternatives[0].transcript
+        : "";
+
+    console.log(`API Call: Last transcription for ${gcsUri}:`);
+    console.log(lastTranscript);
+    return lastTranscript;
   } catch (err) {
     console.error(`Error transcribing ${gcsUri}:`, err.message);
   }

@@ -21,23 +21,23 @@ const folderPrefix = "audio/"; // GCS "folder" prefix
 
 app.post("/transcribe", async (req, res) => {
   try {
-    // List files from GCS "audio/" folder
     const [files] = await storage.bucket("voicebucket-311").getFiles({
       prefix: folderPrefix,
     });
 
-    // Filter .webm files
-    const mp3files = files.filter((file) => file.name.endsWith(".mp3"));
+    const mp3files = files
+      .filter((file) => file.name.endsWith(".mp3"))
+      .sort((a, b) => a.name.localeCompare(b.name));
 
-    // Transcribe each one
-    arr = [];
-    for (const file of mp3files) {
-      const gcsUri = `gs://${"voicebucket-311"}/${file.name}`;
-      transcription = await transcribeFile(gcsUri);
-      arr.push(transcription);
+    if (mp3files.length === 0) {
+      return res.status(404).send("No mp3 files found");
     }
-    console.log(arr);
-    res.json(arr);
+
+    const lastFile = mp3files[mp3files.length - 1];
+    const gcsUri = `gs://voicebucket-311/${lastFile.name}`;
+    const transcription = await transcribeFile(gcsUri);
+
+    res.json([transcription]);
   } catch (err) {
     console.error("Error during transcription:", err);
     res.status(500).send("Failed to process files.");

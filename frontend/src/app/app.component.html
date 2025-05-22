@@ -3,34 +3,32 @@
   <div class="content">
     <!-- Spanish Column -->
     <div class="column spanish-column">
-      <h1>Spanish</h1>
       <div class="word">Hola</div>
     </div>
 
     <!-- English Column -->
     <div class="column english-column">
-      <h1>English</h1>
-      <div class="word">Answer</div>
+      <div #statusH1 class="word">...</div>
     </div>
   </div>
 
   <!-- Footer Section -->
   <div class="footer">
-    <h2>Previous Words</h2>
     <div class="buttons">
-      <button (click)="transcribe()">Transcribe All MP3s</button>
       <button (click)="isRecording ? stopRecording() : startRecording()">
-        {{ isRecording ? "Stop Recording" : "Record Audio" }}
+        {{ isRecording ? "End" : "Start" }}
       </button>
+      <button (click)="transcribe()">Correct?</button>
     </div>
   </div>
 </div>
 
 <div #statusDiv></div>
-
-<ol #listContainer>
+<span>Points:</span>
+<p #pointsP>0</p>
+<!-- <ol #listContainer>
   <li>JELLO WORLD</li>
-</ol>
+</ol> -->
 
 <!-- <nav>
   <a routerLink="/">Home</a> |
