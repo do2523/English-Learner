@@ -1,0 +1,11 @@
+<button (click)="isRecording ? stopRecording() : startRecording()">
+  {{ isRecording ? "Stop Recording" : "Record Audio" }}
+</button>
+
+<div #statusDiv></div>
+
+<button (click)="transcribe()">Transcribe All MP3s</button>
+
+<ol #listContainer>
+  <li>JELLO WORLD</li>
+</ol>

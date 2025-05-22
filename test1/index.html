@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Audio Recorder</title>
+  </head>
+  <body>
+    <button id="recordBtn">Record Audio</button>
+    <div id="status"></div>
+    <button onclick="transcribe()">Transcribe All MP3s</button>
+    <ol id="changeme">
+      <li>JELLO WORLD</li>
+    </ol>
+
+    <script>
+      const recordBtn = document.getElementById("recordBtn");
+      const statusDiv = document.getElementById("status");
+
+      let mediaRecorder;
+      let audioChunks = [];
+
+      async function transcribe() {
+        const response = await fetch("http://localhost:3000/transcribe", {
+          method: "POST",
+        });
+
+        const text = await response.text(); // Get raw text from server
+        console.log("Raw response:", text);
+
+        // Parse the string into an array
+        let result;
+        try {
+          result = JSON.parse(text); // parses ["...", "..."]
+        } catch (e) {
+          alert("Failed to parse response. Make sure it's a valid array.");
+          console.error("Parsing error:", e);
+          return;
+        }
+
+        const listContainer = document.getElementById("changeme");
+        listContainer.innerHTML = ""; // clear old items
+
+        for (let item of result) {
+          const li = document.createElement("li");
+          li.textContent = item;
+          listContainer.appendChild(li);
+        }
+
+        console.log("Parsed array:", result);
+      }
+
+      recordBtn.addEventListener("click", async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          mediaRecorder = new MediaRecorder(stream);
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              audioChunks.push(e.data);
+            }
+          };
+
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/mp3" });
+            audioChunks = [];
+
+            // Prepare form data
+            const formData = new FormData();
+            formData.append("audio", audioBlob, "recorded-audio.mp3");
+
+            statusDiv.textContent = "Uploading...";
+
+            try {
+              const response = await fetch("http://localhost:3000/upload", {
+                method: "POST",
+                body: formData,
+              });
+
+              if (!response.ok) {
+                throw new Error("Upload failed");
+              }
+
+              const result = await response.json();
+              console.log("Uploaded to GCS:", result.url);
+              statusDiv.innerHTML = `
+              ✅ Upload complete! <a href="${result.url}" target="_blank">Play Audio</a>
+            `;
+            } catch (err) {
+              console.error("Upload failed:", err);
+              statusDiv.textContent = "❌ Upload failed";
+            }
+          };
+
+          mediaRecorder.start();
+          recordBtn.textContent = "Recording... Click to Stop";
+
+          // Change button behavior to stop recording
+          recordBtn.onclick = () => {
+            mediaRecorder.stop();
+            recordBtn.textContent = "Record Audio";
+            recordBtn.onclick = () => location.reload(); // reset for next recording
+          };
+        } catch (err) {
+          console.error("Microphone access denied or error:", err);
+          statusDiv.textContent = "❌ Microphone access denied";
+        }
+      });
+    </script>
+  </body>
+</html>
